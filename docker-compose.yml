@@ -1,0 +1,24 @@
+version: '3'
+services:
+    web-seed:
+        build: .
+        # container_name: seed_app
+        ports:
+            - 8080:80
+        links:
+            - db-postgre
+        volumes:
+            - data_volume:/var/www/seeddms/data
+            - conf_volume:/var/www/seeddms/conf
+            - ext_volume:/var/www/seeddms/www/ext
+        restart: always
+    db-postgre:
+        # container_name: seed_postgre_db
+        image: postgres:9.6.18
+        environment:
+            - POSTGRES_PASSWORD=seedadmin
+            - POSTGRES_USER=seedadmin
+volumes:
+    data_volume:
+    conf_volume:
+    ext_volume:
