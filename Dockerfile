@@ -1,15 +1,14 @@
-FROM php:7.4-apache
-LABEL maintainer="Balvinder Singh<balvinder@294@gmail.com>"
+FROM php:7.4.33-apache
+LABEL maintainer="Benjamin Hofmann<hb@beohof.de>"
 
 # Update and install necessary packages
-RUN apt-get update && apt-get install libpng-dev libpq-dev -y
-RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
-RUN docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql
+RUN apt-get update && apt-get install libpng-dev libpq-dev libzip-dev -y
+RUN docker-php-ext-install gd mysqli pdo pdo_mysql zip
 RUN pear channel-update pear.php.net
 RUN pear install Log
 
 # Get seeddms
-RUN curl -fsSL https://downloads.sourceforge.net/project/seeddms/seeddms-6.0.10/seeddms-quickstart-6.0.10.tar.gz | tar -xzC /var/www
+RUN curl -fsSL https://downloads.sourceforge.net/project/seeddms/seeddms-6.0.20/seeddms-quickstart-6.0.20.tar.gz | tar -xzC /var/www
 RUN mv /var/www/seeddms60x /var/www/seeddms && touch /var/www/seeddms/conf/ENABLE_INSTALL_TOOL
 
 # Copy settings-files

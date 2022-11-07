@@ -1,24 +1,49 @@
-version: '3'
 services:
-    web-seed:
+    seeddms:
         build: .
-        # container_name: seed_app
-        ports:
-            - 8080:80
-        links:
-            - db-postgre
+        restart: unless-stopped
         volumes:
-            - data_volume:/var/www/seeddms/data
-            - conf_volume:/var/www/seeddms/conf
-            - ext_volume:/var/www/seeddms/www/ext
-        restart: always
-    db-postgre:
-        # container_name: seed_postgre_db
-        image: postgres:9.6.18
+            - type: bind
+              source: ${PERSISTENCE}/seeddms/data
+              target: /var/www/seeddms/data
+            - type: bind
+              source: ${PERSISTENCE}/seeddms/conf
+              target: /var/www/seeddms/conf
+            - type: bind
+              source: ${PERSISTENCE}/seeddms/ext
+              target: /var/www/seeddms/www/ext
+    mariadb:
+        image: mariadb:10.9.3
+        restart: unless-stopped
+        volumes:
+            - type: bind
+              source: ${PERSISTENCE}/mariadb
+              target: /var/lib/mysql
         environment:
-            - POSTGRES_PASSWORD=seedadmin
-            - POSTGRES_USER=seedadmin
-volumes:
-    data_volume:
-    conf_volume:
-    ext_volume:
+            MARIADB_RANDOM_ROOT_PASSWORD: yes
+            MARIADB_DATABASE: seeddms
+            MARIADB_USER: seeddms
+            MARIADB_PASSWORD: seeddms
+    traefik:
+        image: traefik:2.9.4
+        restart: unless-stopped
+        ports:
+            - ${IP:?err}:80:80
+            - ${IP:?err}:443:443
+        volumes:
+            - type: bind
+              source: ./traefik.yml
+              target: /etc/traefik/dynamic.yml
+            - type: bind
+              source: ${PERSISTENCE:?err}/le/acme.json
+              target: /acme.json
+        env_file: ./.traefik.env
+        environment:
+            - FQDN=${FQDN:?}
+            - UPSTREAM=http://seeddms
+            - TRAEFIK_API=false
+            - TRAEFIK_PROVIDERS_FILE_FILENAME=/etc/traefik/dynamic.yml
+            - TRAEFIK_ENTRYPOINTS_WEB_ADDRESS=:80
+            - TRAEFIK_ENTRYPOINTS_WEB_HTTP_REDIRECTIONS_ENTRYPOINT_TO=websecure
+            - TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS=:443
+            - TRAEFIK_ENTRYPOINTS_WEBSECURE_HTTP_TLS_CERTRES

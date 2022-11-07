@@ -1,0 +1,14 @@
+http:
+  routers:
+    service:
+      rule: "Host(`{{ env "FQDN" }}`)"
+      entryPoints:
+        - websecure
+      service: service
+      tls:
+        certResolver: ca
+  services:
+    service:
+      loadBalancer:
+        servers:
+          - url: "{{ env "UPSTREAM" }}"
